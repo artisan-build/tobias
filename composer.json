@@ -1,0 +1,54 @@
+{
+    "name": "artisan-build/tobias",
+    "description": "Tobias — an agentic terminal coding assistant. Globally installable as `toby`.",
+    "keywords": ["cli", "console", "ai", "agent", "coding", "tui", "laravel-zero"],
+    "homepage": "https://github.com/artisan-build/tobias",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Len Woodward",
+            "email": "len@artisan.build"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "artisan-build/parfait": "^0.1",
+        "artisan-build/resonance": "^0.1.1",
+        "laravel-zero/framework": "^12.0",
+        "laravel/prompts": "^0.3",
+        "prism-php/prism": "^0.99.18",
+        "react/event-loop": "^1.5",
+        "react/http": "^1.10",
+        "react/promise": "^3.2",
+        "react/stream": "^1.4"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.25",
+        "mockery/mockery": "^1.6",
+        "pestphp/pest": "^3.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "bin": ["toby"]
+}
