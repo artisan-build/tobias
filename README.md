@@ -64,8 +64,14 @@ composer global require artisan-build/tobias
 Make sure your global Composer `bin` directory is on your `PATH`
 (`~/.composer/vendor/bin` or `~/.config/composer/vendor/bin`), then run `toby`.
 
-> Tobias isn't on Packagist yet. Until it is, install from VCS by adding the
-> GitHub repo to your global Composer config — see `HANDOFF.md` → Distribution.
+> **Packagist registration is in progress.** Once it lands, the command above
+> just works. In the meantime — or to track the bleeding edge — install straight
+> from the public GitHub repo by adding it to your global Composer config:
+>
+> ```bash
+> composer global config repositories.tobias vcs https://github.com/artisan-build/tobias
+> composer global require artisan-build/tobias:dev-main
+> ```
 
 ### Local (development)
 
