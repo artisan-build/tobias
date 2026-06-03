@@ -6,6 +6,12 @@
   <em>An experimental agentic coding assistant for the terminal — built in the open, on purpose unfinished.</em>
 </p>
 
+<p align="center">
+  <a href="https://packagist.org/packages/artisan-build/tobias"><img src="https://img.shields.io/packagist/v/artisan-build/tobias.svg?style=flat-square" alt="Latest Version on Packagist"></a>
+  <a href="https://packagist.org/packages/artisan-build/tobias"><img src="https://img.shields.io/packagist/php-v/artisan-build/tobias.svg?style=flat-square" alt="PHP Version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/packagist/l/artisan-build/tobias.svg?style=flat-square" alt="License"></a>
+</p>
+
 ---
 
 > **Heads up — this is a learning exercise, not a product.**
@@ -64,12 +70,10 @@ composer global require artisan-build/tobias
 Make sure your global Composer `bin` directory is on your `PATH`
 (`~/.composer/vendor/bin` or `~/.config/composer/vendor/bin`), then run `toby`.
 
-> **Packagist registration is in progress.** Once it lands, the command above
-> just works. In the meantime — or to track the bleeding edge — install straight
-> from the public GitHub repo by adding it to your global Composer config:
+> To track the bleeding edge instead of tagged releases, install `dev-main`
+> straight from the GitHub repo:
 >
 > ```bash
-> composer global config repositories.tobias vcs https://github.com/artisan-build/tobias
 > composer global require artisan-build/tobias:dev-main
 > ```
 
