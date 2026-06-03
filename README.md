@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <em>An experimental agentic coding assistant for the terminal — built in the open, on purpose unfinished.</em>
+  <em>An experimental agentic coding assistant for the terminal — built in the open, using pure PHP, unfinished on purpose.</em>
 </p>
 
 <p align="center">
