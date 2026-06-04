@@ -922,7 +922,7 @@ class CodePromptRenderer extends Renderer
         // Cycling status text
         $labels = ['Thinking', 'Reasoning', 'Composing', 'Analyzing'];
         $labelIndex = (int) floor($elapsed / 1.5) % count($labels);
-        $dotCount = ($frame / 4) % 4;
+        $dotCount = intdiv($frame, 4) % 4;
         $label = $labels[$labelIndex].str_repeat('.', (int) $dotCount);
         $labelPadded = str_pad($label, 12); // Stable width so wave doesn't jump
 
