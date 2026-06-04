@@ -8,6 +8,7 @@ use App\Console\Prompts\Code\Providers\ProviderManager;
 use App\Console\Prompts\Code\Support\ChatSession;
 use App\Console\Prompts\Code\Support\Session;
 use App\Console\Prompts\Code\Support\SessionManager;
+use App\Support\CrashLogger;
 
 trait HasAISession
 {
@@ -196,12 +197,39 @@ trait HasAISession
 
         $chat->providerManager->stream(
             messages: $messages,
-            onChunk: fn (string $chunk) => $this->handleStreamChunk($chunk),
-            onToolCall: fn (array $toolCall) => $this->handleStreamToolCall($toolCall),
-            onComplete: fn () => $this->handleStreamComplete(),
-            onError: fn (\Throwable $e) => $this->handleStreamError($e),
+            onChunk: $this->guardStreamCallback('onChunk', fn (string $chunk) => $this->handleStreamChunk($chunk)),
+            onToolCall: $this->guardStreamCallback('onToolCall', fn (array $toolCall) => $this->handleStreamToolCall($toolCall)),
+            onComplete: $this->guardStreamCallback('onComplete', fn () => $this->handleStreamComplete()),
+            onError: $this->guardStreamCallback('onError', fn (\Throwable $e) => $this->handleStreamError($e)),
             tools: $this->getToolDefinitions(),
         );
+    }
+
+    /**
+     * Wrap a streaming callback so an exception inside it is logged and shown
+     * as a toast rather than escaping the ReactPHP loop and killing the app.
+     */
+    protected function guardStreamCallback(string $context, callable $callback): callable
+    {
+        return function (...$args) use ($context, $callback) {
+            try {
+                return $callback(...$args);
+            } catch (\Throwable $e) {
+                CrashLogger::exception("stream:{$context}", $e);
+
+                $chat = $this->sessionManager->active();
+                if ($chat) {
+                    $chat->stopThinking();
+                    $chat->isStreaming = false;
+                    $chat->status = 'error';
+                }
+
+                $this->showToast('Error (logged): '.$e->getMessage());
+                $this->requestRender();
+
+                return null;
+            }
+        };
     }
 
     protected function handleStreamChunk(string $chunk): void

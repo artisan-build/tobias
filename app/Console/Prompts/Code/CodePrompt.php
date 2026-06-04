@@ -6,6 +6,7 @@ namespace App\Console\Prompts\Code;
 
 use App\Console\Prompts\Code\Concerns as CodeConcerns;
 use App\Console\Prompts\Code\Support\ChatSession;
+use App\Support\CrashLogger;
 use App\Support\Prompts\AsyncPrompt;
 use ArtisanBuild\Parfait\Components\TextArea;
 use ArtisanBuild\Parfait\Enums\Color;
@@ -29,6 +30,8 @@ class CodePrompt extends AsyncPrompt
     protected ?string $pusherChannel = null;
 
     protected bool $inAltScreen = false;
+
+    protected bool $renderGuardActive = false;
 
     public int $terminalWidth = 80;
 
@@ -63,6 +66,8 @@ class CodePrompt extends AsyncPrompt
     ) {
         $this->validate = null;
         static::$themes['default'][static::class] = CodePromptRenderer::class;
+
+        $this->installErrorHandling();
 
         $this->inputTextArea = TextArea::make('input')
             ->placeholder('Type here... Esc then Enter to send')
@@ -128,6 +133,67 @@ class CodePrompt extends AsyncPrompt
     public function showCursor(): void
     {
         static::output()->write("\e[?25h");
+    }
+
+    /**
+     * Keep non-fatal PHP errors from killing the event loop.
+     *
+     * laravel-zero routes deprecations through a NullLogger, so a single
+     * "implicit float to int" notice becomes a fatal Error that escapes the
+     * ReactPHP loop and exits the process with no visible message (the TUI is
+     * in the alternate screen). We log such errors and swallow them instead,
+     * and record genuine fatals on shutdown with the terminal restored.
+     */
+    protected function installErrorHandling(): void
+    {
+        set_error_handler(function (int $errno, string $message, string $file = '', int $line = 0): bool {
+            if (! (error_reporting() & $errno)) {
+                return true; // suppressed with @ — ignore
+            }
+
+            $label = match ($errno) {
+                E_DEPRECATED, E_USER_DEPRECATED => 'DEPRECATED',
+                E_NOTICE, E_USER_NOTICE => 'NOTICE',
+                E_WARNING, E_USER_WARNING => 'WARNING',
+                default => 'PHP',
+            };
+
+            CrashLogger::message($label, sprintf('%s in %s:%d', $message, $file, $line));
+
+            return true; // handled — do not propagate to the framework handler
+        });
+
+        register_shutdown_function(function (): void {
+            $error = error_get_last();
+
+            if ($error === null || ! in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+                return;
+            }
+
+            CrashLogger::message('FATAL', sprintf('%s in %s:%d', $error['message'], $error['file'], $error['line']));
+            $this->cleanup();
+            fwrite(STDERR, "\nToby crashed. Details were logged to ".CrashLogger::path()."\n");
+        });
+    }
+
+    /**
+     * Render, but never let a rendering bug take down the session. A failed
+     * frame is logged and surfaced as a toast on the next good frame.
+     */
+    protected function render(): void
+    {
+        if ($this->renderGuardActive) {
+            return; // never recurse through a failing render
+        }
+
+        try {
+            parent::render();
+        } catch (Throwable $e) {
+            $this->renderGuardActive = true;
+            CrashLogger::exception('render', $e);
+            $this->showToast('Render error (logged): '.$e->getMessage());
+            $this->renderGuardActive = false;
+        }
     }
 
     protected function registerCleanupHandlers(): void
